@@ -4,9 +4,31 @@ namespace DataPoolLib
 {
     public static class PropertyLoader
     {
-        public static PropertyInfo[] LoadProperties<T>()
+        readonly static Dictionary<string, PropertyInfo[]> PROPERTY_CACHE = new Dictionary<string, PropertyInfo[]>();
+
+        public static int CacheCount => PROPERTY_CACHE.Count;
+
+        public static void ClearCache()
         {
-            return LoadProperties(typeof(T));
+            PROPERTY_CACHE.Clear();
+        }
+
+        public static PropertyInfo[] GetOrderedProperties(Type type)
+        {
+            if (type.GetCustomAttribute<DataPoolObjectAttribute>() == null && type.GetCustomAttribute<DataPoolPropertyAttribute>() == null)
+            {
+                throw new InvalidOperationException($"{type.FullName}: must have {nameof(DataPoolObjectAttribute)} or {nameof(DataPoolPropertyAttribute)}");
+            }
+
+            string key = type.Name;
+
+            PropertyInfo[]? props;
+            if (false == PROPERTY_CACHE.TryGetValue(key, out props))
+            {
+                props = LoadProperties(type);
+                PROPERTY_CACHE[key] = props;
+            }
+            return props;
         }
 
         public static PropertyInfo[] LoadProperties(Type type)

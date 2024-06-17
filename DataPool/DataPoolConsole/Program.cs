@@ -6,7 +6,7 @@ namespace DataPoolConsole
     {
         static void Main(string[] args)
         {
-            foreach (var item in PropertyLoader.LoadProperties<Obj>())
+            foreach (var item in PropertyLoader.LoadProperties(typeof(Obj)))
             {
                 Console.WriteLine(item.Name);
             }
