@@ -1,32 +1,44 @@
 ﻿namespace DataPoolLib
 {
+    using System.Reflection;
     using static DataPoolConstants;
 
     public static class DataPoolWriter
     {
-        public static void Write(BinaryWriter writer, object obj, Type type)
+        public static void Write(BinaryWriter writer, object? obj, Type type)
         {
             if (type.IsValueType || type == typeof(string))
             {
                 WriteValue(writer, obj, type);
+                return;
             }
 
-            if (type.IsArray)
-            {
-
-            }
-        }
-
-        public static void WriteArray(BinaryWriter writer, object? array, Type elementType)
-        {
-            if (array is null)
+            if (obj is null)
             {
                 writer.Write(NULL);
                 return;
             }
+            else
+            {
+                writer.Write(NOT_NULL);
+            }
 
-            Array arr = (Array)array;
-            writer.Write(NOT_NULL);
+            if (type.IsArray)
+            {
+                WriteArray(writer, (Array)obj);
+                return;
+            }
+
+            PropertyInfo[] properties = PropertyLoader.GetOrderedProperties(type);
+            foreach (PropertyInfo property in properties)
+            {
+                Write(writer, property.GetValue(obj), property.PropertyType);
+            }
+        }
+
+        public static void WriteArray(BinaryWriter writer, Array arr)
+        {
+            Type elementType = arr.GetType().GetElementType()!;
             writer.Write((UInt16)arr.Length);
             foreach (object element in arr)
             {

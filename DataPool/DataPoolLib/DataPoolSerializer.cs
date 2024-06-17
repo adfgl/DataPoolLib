@@ -6,9 +6,6 @@ namespace DataPoolLib
 {
     public static class DataPoolSerializer
     {
-        internal const byte NULL = 0;
-        internal const byte NOT_NULL = 1;
-
         public static byte[] Serialize<T>(T obj, bool compress = false, EEncoding encoding = EEncoding.UTF8)
         {
             Type type = typeof(T);

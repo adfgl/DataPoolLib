@@ -6,13 +6,28 @@ namespace DataPoolConsole
     {
         static void Main(string[] args)
         {
-            foreach (var item in PropertyLoader.LoadProperties(typeof(Obj)))
+            var obj = new Obj<int>()
             {
-                Console.WriteLine(item.Name);
-            }
+                Name = "John",
+                Age = 30,
+                IsAlive = true,
+                Matrix = new int[][]
+                {
+                    [ 1, 2, 3 ],
+                    [ 4, 5, 6 ],
+                    [ 7, 8, 9 ]
+                },
+            };
+            var s = DataPoolSerializer.Serialize(obj, true);
+            var json = System.Text.Json.JsonSerializer.Serialize(obj);
+
+            Console.WriteLine(s.Length + "/" + json.Length);
+
+            var obj2 = DataPoolSerializer.Deserialize<Obj<int>>(s);
         }
 
-        public class Obj
+        [DataPoolObject("1.0.0")]
+        public class Obj<T>
         {
             [DataPoolProperty(0)]
             public string Name { get; set;}
@@ -24,7 +39,8 @@ namespace DataPoolConsole
             public bool IsAlive { get; set; }
 
             [DataPoolProperty(2)]
-            public double[][] Matrix { get; set; } 
+            public T[][] Matrix { get; set; }
         }
+
     }
 }

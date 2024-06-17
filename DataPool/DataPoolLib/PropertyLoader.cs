@@ -17,6 +17,10 @@ namespace DataPoolLib
         {
             foreach (Type type in types)
             {
+                if (PROPERTY_CACHE.ContainsKey(type.Name))
+                {
+                    throw new InvalidOperationException($"{type.FullName}: already loaded. Make sure you do not have duplicate names in your classes.");
+                }
                 GetOrderedProperties(type);
             }
         }

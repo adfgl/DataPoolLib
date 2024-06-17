@@ -1,5 +1,6 @@
 ﻿namespace DataPoolLib
 {
+    using System.Reflection;
     using static DataPoolConstants;
 
     public static class DataPoolReader
@@ -13,23 +14,27 @@
             }
 
             // reference types
+            if (NULL == reader.ReadByte())
+            {
+                return null;
+            }
+
             if (type.IsArray)
             {
-
+                return ReadArray(reader, type.GetElementType()!);
             }
 
-            if (type.IsGenericType)
+            PropertyInfo[] properties = PropertyLoader.GetOrderedProperties(type);
+            object obj = Activator.CreateInstance(type)!;
+            foreach (PropertyInfo property in properties)
             {
-
+                property.SetValue(obj, Read(reader, property.PropertyType));
             }
-
-            return null;
+            return obj;
         }
 
-        public static Array? ReadArray(BinaryReader reader, Type elementType)
+        public static Array ReadArray(BinaryReader reader, Type elementType)
         {
-            if (reader.ReadByte() == NULL) return null;
-
             int length = reader.ReadUInt16();
             Array array = Array.CreateInstance(elementType, length);
             for (int i = 0; i < length; i++)
