@@ -22,6 +22,9 @@ namespace DataPoolConsole
 
             [DataPoolProperty(1)]
             public bool IsAlive { get; set; }
+
+            [DataPoolProperty(2)]
+            public double[][] Matrix { get; set; } 
         }
     }
 }

@@ -13,6 +13,14 @@ namespace DataPoolLib
             PROPERTY_CACHE.Clear();
         }
 
+        public static void PreloadProperties(params Type[] types)
+        {
+            foreach (Type type in types)
+            {
+                GetOrderedProperties(type);
+            }
+        }
+
         public static PropertyInfo[] GetOrderedProperties(Type type)
         {
             if (type.GetCustomAttribute<DataPoolObjectAttribute>() == null && type.GetCustomAttribute<DataPoolPropertyAttribute>() == null)
