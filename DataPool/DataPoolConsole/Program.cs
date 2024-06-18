@@ -1,39 +1,40 @@
 ﻿using DataPoolLib;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace DataPoolConsole
 {
     internal class Program
     {
+
         static void Main(string[] args)
         {
-            var obj = new Obj<int>()
+
+
+            var objs = RandomObjectGenerator.GenerateRandomObjects(10); 
+            var container = new ObjContainer() { Objects = objs };
+
+
+            var o = new Obj()
             {
-                Name = "Jdasd ",
-                Age = 30,
-                IsAliveASdasdads = true,
-                Matrix = new int[][]
-                {
-                    [ 1, 2, 3 ],
-                    [ 4, 5, 6 ],
-                    [ 7, 8, 9 ]
-                },
-
-                V = [ "a", "b", "c"]
+                Age = 10,
+                Values = new int[] { 1, 2, 3, 4, 5 },
             };
-            var s = DataPoolSerializer.Serialize(obj, true);
-            var json = System.Text.Json.JsonSerializer.Serialize(obj);
 
-            Console.WriteLine(s.Length + "/" + json.Length);
+            var s = DataPoolSerializer.Serialize(o, true);
+            var json = System.Text.Json.JsonSerializer.Serialize(o);
+            Console.WriteLine(s.Length + "/" + json.Length + " " + ((double)json.Length / (double)s.Length));
 
-            var obj2 = DataPoolSerializer.Deserialize<Obj<int>>(s);
-
-            Console.WriteLine(short.MinValue);
-            Console.WriteLine(int.MinValue);
+            var d = DataPoolSerializer.Deserialize<Obj>(s);
         }
 
-        [DataPoolObject("1.0.0", true)]
-        public class Obj<T>
+        [DataPoolObject("1.0.0")]
+        public class ObjContainer
+        {
+            [DataPoolProperty(0, false)]
+            public Obj[] Objects { get; set; }
+        }
+
+        [DataPoolObject("1.0.0")]
+        public class Obj
         {
             [DataPoolProperty(0)]
             public string Name { get; set;}
@@ -42,13 +43,107 @@ namespace DataPoolConsole
             public int Age { get; set; }
 
             [DataPoolProperty(1)]
-            public bool IsAliveASdasdads { get; set; }
+            public bool IsAlive { get; set; }
 
             [DataPoolProperty(2, true)]
-            public T[][] Matrix { get; set; }
+            public double[][] Matrix { get; set; }
 
-            [DataPoolProperty(4)]
-            public string[] V { get; set; }
+            [DataPoolProperty(6, true)]
+            public int[][] Matrix1 { get; set; }
+
+            [DataPoolProperty(4, true)]
+            public int[] Values { get; set; }
+        }
+
+
+
+        public class RandomObjectGenerator
+        {
+            private static readonly Random random = new Random();
+
+            public static Obj[] GenerateRandomObjects(int count)
+            {
+                Obj[] objects = new Obj[count];
+
+                for (int i = 0; i < count; i++)
+                {
+                    Obj obj = new Obj
+                    {
+                        Name = GenerateRandomString(),
+                        Age = random.Next(1, 100), // Random age between 1 and 100
+                        IsAlive = random.Next(2) == 0, // Random boolean value
+
+                        // Generate random matrix of doubles
+                        Matrix = GenerateRandomDoubleMatrix(),
+
+                        // Generate random matrix of integers
+                        Matrix1 = GenerateRandomIntMatrix(),
+
+                        // Generate random array of integers
+                        Values = GenerateRandomIntArray()
+                    };
+
+                    objects[i] = obj;
+                }
+
+                return objects;
+            }
+
+            private static string GenerateRandomString()
+            {
+                const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+                return new string(Enumerable.Repeat(chars, 8)
+                  .Select(s => s[random.Next(s.Length)]).ToArray());
+            }
+
+            private static double[][] GenerateRandomDoubleMatrix()
+            {
+                const int rows = 50;
+                const int cols = 50;
+                double[][] matrix = new double[rows][];
+
+                for (int i = 0; i < rows; i++)
+                {
+                    matrix[i] = new double[cols];
+                    for (int j = 0; j < cols; j++)
+                    {
+                        matrix[i][j] = random.NextDouble() * 100; // Random double value
+                    }
+                }
+
+                return matrix;
+            }
+
+            private static int[][] GenerateRandomIntMatrix()
+            {
+                const int rows = 20;
+                const int cols = 40;
+                int[][] matrix = new int[rows][];
+
+                for (int i = 0; i < rows; i++)
+                {
+                    matrix[i] = new int[cols];
+                    for (int j = 0; j < cols; j++)
+                    {
+                        matrix[i][j] = random.Next(int.MinValue, int.MaxValue); // Random integer value
+                    }
+                }
+
+                return matrix;
+            }
+
+            private static int[] GenerateRandomIntArray()
+            {
+                const int length = 100;
+                int[] array = new int[length];
+
+                for (int i = 0; i < length; i++)
+                {
+                    array[i] = random.Next(int.MinValue, int.MaxValue); // Random integer value
+                }
+
+                return array;
+            }
         }
 
     }

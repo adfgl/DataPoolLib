@@ -1,17 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace DataPoolLib
+﻿namespace DataPoolLib
 {
-    public enum ENumber
+    public enum ENumber : byte
     {
+        Zero,
+
         Byte,
+        SByte,
+
+        Short,
+        UShort,
+        
         Float,
         Double,
-        Short,
-        Int
+        
+        Int,
+        Uint
     }
 }

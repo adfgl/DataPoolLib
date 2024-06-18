@@ -16,11 +16,6 @@
             }
 
             // reference types
-            if (NULL == reader.ReadByte())
-            {
-                return null;
-            }
-
             if (type == typeof(string))
             {
                 return ReadString(reader);
@@ -31,18 +26,21 @@
                 return ReadArray(reader, type.GetElementType()!, allowDowngrade);
             }
 
+            if (NULL == reader.ReadByte()) return null;
             DataPoolProperty[] properties = PropertyLoader.GetOrderedProperties(type);
             object obj = Activator.CreateInstance(type)!;
             foreach (DataPoolProperty property in properties)
             {
                 PropertyInfo info = property.Info;
-                info.SetValue(obj, Read(reader, info.PropertyType, allowDowngrade));
+                info.SetValue(obj, Read(reader, info.PropertyType, allowDowngrade && property.AllowDowngrade));
             }
             return obj;
         }
 
-        public static Array ReadArray(BinaryReader reader, Type elementType, bool allowDowngrade)
+        public static Array? ReadArray(BinaryReader reader, Type elementType, bool allowDowngrade)
         {
+            if (NULL == reader.ReadByte()) return null;
+
             int length = reader.ReadUInt16();
             Array array = Array.CreateInstance(elementType, length);
 
@@ -64,8 +62,10 @@
             return array;
         }
 
-        public static string ReadString(BinaryReader reader)
+        public static string? ReadString(BinaryReader reader)
         {
+            if (NULL == reader.ReadByte()) return null;
+
             int length = reader.ReadUInt16();
             if (length == 0) return string.Empty;
 
@@ -115,9 +115,18 @@
                 case TypeCode.UInt64:
                     value = reader.ReadUInt64();
                     break;
+
                 case TypeCode.Single:
-                    value = reader.ReadSingle();
+                    if (allowDowngrade)
+                    {
+                        value = ReadDowngradedFloat(reader);
+                    }
+                    else
+                    {
+                        value = reader.ReadSingle();
+                    }
                     break;
+
                 case TypeCode.Double:
                     if (allowDowngrade)
                     {
@@ -140,35 +149,51 @@
             return value;
         }
 
-        public static double ReadDowngradedDouble(BinaryReader reader)
+        public static float ReadDowngradedFloat(BinaryReader reader)
         {
-            byte flag = reader.ReadByte();
+            ENumber flag = (ENumber)reader.ReadByte();
             switch (flag)
             {
-                case 0:
+                case ENumber.Zero:
                     return 0;
-
-                case 1:
+                case ENumber.Float:
                     return reader.ReadSingle();
 
-                case 2:
-                    return reader.ReadDouble();
-
-                case 3:
-                    return reader.ReadInt32();
-
-                case 4:
-                    return reader.ReadSByte();
-
-                case 5:
-                    return reader.ReadInt16();
-
-                case 6:
+                case ENumber.Byte:
                     return reader.ReadByte();
-
-                case 7:
+                case ENumber.SByte:
+                    return reader.ReadSByte();
+                case ENumber.Short:
+                    return reader.ReadInt16();
+                case ENumber.UShort:
                     return reader.ReadUInt16();
+         
+                default:
+                    throw new NotImplementedException("unknown flag: " + flag);
+            }
+        }
 
+        public static double ReadDowngradedDouble(BinaryReader reader)
+        {
+            ENumber flag = (ENumber)reader.ReadByte();
+            switch (flag)
+            {
+                case ENumber.Zero:
+                    return 0;
+                case ENumber.Byte:
+                    return reader.ReadByte();
+                case ENumber.SByte:
+                    return reader.ReadSByte();
+                case ENumber.Short:
+                    return reader.ReadInt16();
+                case ENumber.UShort:
+                    return reader.ReadUInt16();
+                case ENumber.Float:
+                    return reader.ReadSingle();
+                case ENumber.Double:
+                    return reader.ReadDouble();
+                case ENumber.Int:
+                    return reader.ReadInt32();
                 default:
                     throw new NotImplementedException("unknown flag: " + flag);
             }
@@ -176,27 +201,21 @@
 
         public static int ReadDowngradedInteger(BinaryReader reader)
         {
-            byte flag = reader.ReadByte();
+            ENumber flag = (ENumber)reader.ReadByte();
             switch (flag)
             {
-                case 0:
+                case ENumber.Zero:
                     return 0;
-
-                case 1:
-                    return reader.ReadInt32();
-
-                case 2:
+                case ENumber.Byte:
                     return reader.ReadByte();
-
-                case 3:
-                    return reader.ReadUInt16();
-
-                case 4:
+                case ENumber.SByte:
                     return reader.ReadSByte();
-
-                case 5:
+                case ENumber.Short:
                     return reader.ReadInt16();
-
+                case ENumber.UShort:
+                    return reader.ReadUInt16();
+                case ENumber.Int:
+                    return reader.ReadInt32();
                 default:
                     throw new NotImplementedException("unknown flag: " + flag);
             }

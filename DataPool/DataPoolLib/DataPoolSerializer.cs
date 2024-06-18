@@ -26,11 +26,9 @@ namespace DataPoolLib
             using MemoryStream stream = new MemoryStream();
             StreamHelper.WriteMetaData(stream, metaData);
 
-            using (Stream dataStream = compress ? new GZipStream(stream, CompressionLevel.Optimal) : stream)
-            {
-                using BinaryWriter writer = new BinaryWriter(dataStream, GetEncoding(encoding));
-                DataPoolWriter.Write(writer, obj, type, attr.AllowDowngrade);
-            }
+            using BinaryWriter writer = new BinaryWriter(stream, GetEncoding(encoding));
+            DataPoolWriter.Write(writer, obj, type, compress);
+
             return stream.ToArray();
         }
 
@@ -56,12 +54,10 @@ namespace DataPoolLib
                 throw new InvalidOperationException($"Version {attr.Version} does not match serialized version {metaData.Version}");
             }
 
-            using Stream dataStream = metaData.Compressed ? new GZipStream(stream, CompressionMode.Decompress) : stream;
-
             object? obj = new T();
-            using (BinaryReader reader = new BinaryReader(dataStream, GetEncoding(metaData.Encoding)))
+            using (BinaryReader reader = new BinaryReader(stream, GetEncoding(metaData.Encoding)))
             {
-                obj = DataPoolReader.Read(reader, type, attr.AllowDowngrade);
+                obj = DataPoolReader.Read(reader, type, metaData.Compressed);
             }
             if (obj is null)
             {

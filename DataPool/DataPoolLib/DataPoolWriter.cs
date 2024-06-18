@@ -2,7 +2,6 @@
 {
     using System.Reflection;
     using System.Runtime.InteropServices;
-    using System.Runtime.InteropServices.Marshalling;
     using System.Text;
     using static DataPoolConstants;
 
@@ -42,7 +41,7 @@
             foreach (DataPoolProperty property in properties)
             {
                 PropertyInfo info = property.Info;
-                Write(writer, info.GetValue(obj), info.PropertyType, allowDowngrade);
+                Write(writer, info.GetValue(obj), info.PropertyType, allowDowngrade && property.AllowDowngrade);
             }
         }
 
@@ -50,7 +49,6 @@
         {
             Type elementType = arr.GetType().GetElementType()!;
             writer.Write((UInt16)arr.Length);
-
             if (elementType.IsValueType && false == allowDowngrade)
             {
                 int elementSize = Marshal.SizeOf(elementType);
@@ -85,24 +83,25 @@
         {
             if (value == 0) // byte
             {
-                writer.Write((byte)0);
+                writer.Write((byte)ENumber.Zero);
+                return;
             }
 
             if (value > 0)
             {
                 if (value <= byte.MaxValue) // byte
                 {
-                    writer.Write((byte)2);
+                    writer.Write((byte)ENumber.Byte);
                     writer.Write((byte)value);
                 }
                 else if (value <= ushort.MaxValue) // short
                 {
-                    writer.Write((byte)3);
+                    writer.Write((byte)ENumber.Short);
                     writer.Write((ushort)value);
                 }
                 else // int
                 {
-                    writer.Write((byte)1);
+                    writer.Write((byte)ENumber.Int);
                     writer.Write(value);
                 }
             }
@@ -110,18 +109,66 @@
             {
                 if (value >= sbyte.MinValue) // sbyte
                 {
-                    writer.Write((byte)4);
+                    writer.Write((byte)ENumber.SByte);
                     writer.Write((sbyte)value);
                 }
                 else if (value >= short.MinValue) // short
                 {
-                    writer.Write((byte)5);
+                    writer.Write((byte)ENumber.Short);
                     writer.Write((short)value);
                 }
                 else // int
                 {
-                    writer.Write((byte)1);
+                    writer.Write((byte)ENumber.Int);
                     writer.Write(value);
+                }
+            }
+        }
+
+        public static void WriteDowngraded(BinaryWriter writer, float value)
+        {
+            if (value == 0) // byte
+            {
+                writer.Write((byte)ENumber.Zero);
+                return;
+            }
+
+            if (value != MathF.Floor(value) 
+                || 
+                value > ushort.MaxValue 
+                ||
+                value < short.MinValue)
+            {
+                writer.Write((byte)ENumber.Float);
+                writer.Write((float)value);
+            }
+            else
+            {
+                if (value > 0)
+                {
+                    if (value <= byte.MaxValue) // byte
+                    {
+                        writer.Write((byte)ENumber.Byte);
+                        writer.Write((byte)value);
+                    }
+                    else if (value <= ushort.MaxValue) // short
+                    {
+                        writer.Write((byte)ENumber.UShort);
+                        writer.Write((ushort)value);
+                    }
+                }
+                else
+                {
+                    if (value >= sbyte.MinValue)
+                    {
+                        writer.Write((byte)ENumber.SByte);
+                        writer.Write((sbyte)value);
+                    }
+                    else if (value >= short.MinValue)
+                    {
+                        writer.Write((byte)ENumber.Short);
+                        writer.Write((short)value);
+                    }
                 }
             }
         }
@@ -130,58 +177,58 @@
         {
             if (value == 0) // byte
             {
-                writer.Write((byte)0);
+                writer.Write((byte)ENumber.Zero);
+                return;
             }
 
-            bool hasFraction = value != Math.Floor(value);
-            if (hasFraction)
+            if (value != Math.Floor(value)) // has fraction
             {
-                if (value <= float.MaxValue) // float
+                if (value <= float.MaxValue || value >= float.MinValue) // float
                 {
-                    writer.Write((byte)1);
+                    writer.Write((byte)ENumber.Float);
                     writer.Write((float)value);
                 }
                 else // double
                 {
-                    writer.Write((byte)2);
+                    writer.Write((byte)ENumber.Double);
                     writer.Write(value);
                 }
             }
             else
             {
-                if (value < 0)
+                if (value > 0)
                 {
-                    if (value <= sbyte.MinValue)
+                    if (value <= byte.MaxValue) // byte
                     {
-                        writer.Write((byte)4);
+                        writer.Write((byte)ENumber.Byte);
                         writer.Write((byte)value);
                     }
-                    else if (value <= short.MinValue)
+                    else if (value <= ushort.MaxValue) // short
                     {
-                        writer.Write((byte)5);
-                        writer.Write((byte)value);
+                        writer.Write((byte)ENumber.UShort);
+                        writer.Write((ushort)value);
                     }
                     else // int
                     {
-                        writer.Write((byte)3);
+                        writer.Write((byte)ENumber.Int);
                         writer.Write((int)value);
                     }
                 }
                 else
                 {
-                    if (value <= byte.MaxValue) // byte
+                    if (value >= sbyte.MinValue)
                     {
-                        writer.Write((byte)6);
-                        writer.Write((byte)value);
+                        writer.Write((byte)ENumber.SByte);
+                        writer.Write((sbyte)value);
                     }
-                    else if (value <= ushort.MaxValue) // short
+                    else if (value >= short.MinValue)
                     {
-                        writer.Write((byte)7);
-                        writer.Write((ushort)value);
+                        writer.Write((byte)ENumber.Short);
+                        writer.Write((short)value);
                     }
                     else // int
                     {
-                        writer.Write((byte)3);
+                        writer.Write((byte)ENumber.Int);
                         writer.Write((int)value);
                     }
                 }
@@ -235,8 +282,16 @@
                     break;
 
                 case TypeCode.Single:
-                    writer.Write((float)value);
+                    if (allowDowngrade)
+                    {
+                        WriteDowngraded(writer, (float)value);
+                    }
+                    else
+                    {
+                        writer.Write((float)value);
+                    }
                     break;
+
                 case TypeCode.Double:
                     if (allowDowngrade)
                     {
@@ -247,6 +302,7 @@
                         writer.Write((double)value);
                     }
                     break;
+
                 case TypeCode.Decimal:
                     writer.Write((decimal)value);
                     break;
