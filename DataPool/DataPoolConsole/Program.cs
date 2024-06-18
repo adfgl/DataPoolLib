@@ -1,4 +1,5 @@
 ﻿using DataPoolLib;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace DataPoolConsole
 {
@@ -8,15 +9,17 @@ namespace DataPoolConsole
         {
             var obj = new Obj<int>()
             {
-                Name = "John",
+                Name = "Jdasd ",
                 Age = 30,
-                IsAlive = true,
+                IsAliveASdasdads = true,
                 Matrix = new int[][]
                 {
                     [ 1, 2, 3 ],
                     [ 4, 5, 6 ],
                     [ 7, 8, 9 ]
                 },
+
+                V = [ "a", "b", "c"]
             };
             var s = DataPoolSerializer.Serialize(obj, true);
             var json = System.Text.Json.JsonSerializer.Serialize(obj);
@@ -24,9 +27,12 @@ namespace DataPoolConsole
             Console.WriteLine(s.Length + "/" + json.Length);
 
             var obj2 = DataPoolSerializer.Deserialize<Obj<int>>(s);
+
+            Console.WriteLine(short.MinValue);
+            Console.WriteLine(int.MinValue);
         }
 
-        [DataPoolObject("1.0.0")]
+        [DataPoolObject("1.0.0", true)]
         public class Obj<T>
         {
             [DataPoolProperty(0)]
@@ -36,11 +42,15 @@ namespace DataPoolConsole
             public int Age { get; set; }
 
             [DataPoolProperty(1)]
-            public bool IsAlive { get; set; }
+            public bool IsAliveASdasdads { get; set; }
 
-            [DataPoolProperty(2)]
+            [DataPoolProperty(2, true)]
             public T[][] Matrix { get; set; }
+
+            [DataPoolProperty(4)]
+            public string[] V { get; set; }
         }
 
     }
+
 }

@@ -29,7 +29,7 @@ namespace DataPoolLib
             using (Stream dataStream = compress ? new GZipStream(stream, CompressionLevel.Optimal) : stream)
             {
                 using BinaryWriter writer = new BinaryWriter(dataStream, GetEncoding(encoding));
-                DataPoolWriter.Write(writer, obj, type);
+                DataPoolWriter.Write(writer, obj, type, attr.AllowDowngrade);
             }
             return stream.ToArray();
         }
@@ -61,7 +61,7 @@ namespace DataPoolLib
             object? obj = new T();
             using (BinaryReader reader = new BinaryReader(dataStream, GetEncoding(metaData.Encoding)))
             {
-                obj = DataPoolReader.Read(reader, type);
+                obj = DataPoolReader.Read(reader, type, attr.AllowDowngrade);
             }
             if (obj is null)
             {

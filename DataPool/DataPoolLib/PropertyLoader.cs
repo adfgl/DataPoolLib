@@ -4,7 +4,7 @@ namespace DataPoolLib
 {
     public static class PropertyLoader
     {
-        readonly static Dictionary<string, PropertyInfo[]> PROPERTY_CACHE = new Dictionary<string, PropertyInfo[]>();
+        readonly static Dictionary<string, DataPoolProperty[]> PROPERTY_CACHE = new Dictionary<string, DataPoolProperty[]>();
 
         public static int CacheCount => PROPERTY_CACHE.Count;
 
@@ -25,7 +25,7 @@ namespace DataPoolLib
             }
         }
 
-        public static PropertyInfo[] GetOrderedProperties(Type type)
+        public static DataPoolProperty[] GetOrderedProperties(Type type)
         {
             if (type.GetCustomAttribute<DataPoolObjectAttribute>() == null && type.GetCustomAttribute<DataPoolPropertyAttribute>() == null)
             {
@@ -34,7 +34,7 @@ namespace DataPoolLib
 
             string key = type.Name;
 
-            PropertyInfo[]? props;
+            DataPoolProperty[]? props;
             if (false == PROPERTY_CACHE.TryGetValue(key, out props))
             {
                 props = LoadProperties(type);
@@ -43,12 +43,12 @@ namespace DataPoolLib
             return props;
         }
 
-        public static PropertyInfo[] LoadProperties(Type type)
+        public static DataPoolProperty[] LoadProperties(Type type)
         {
             PropertyInfo[] props = type.GetProperties();
             int numProps = props.Length;
 
-            PropertyInfo[] attrProps = new PropertyInfo[numProps];
+            DataPoolProperty[] attrProps = new DataPoolProperty[numProps];
             int[] keys = new int[numProps];
             int count = 0;
 
@@ -86,18 +86,21 @@ namespace DataPoolLib
 
                 // add new values
                 keys[insertIndex] = key;
-                attrProps[insertIndex] = p;
+                attrProps[insertIndex] = new DataPoolProperty(p)
+                {
+                    AllowDowngrade = attr.AllowDowngrade
+                };
                 count++;
             }
 
             if (count == 0)
             {
-                return Array.Empty<PropertyInfo>();
+                return Array.Empty<DataPoolProperty>();
             }
 
             if (count == numProps) return attrProps;
 
-            PropertyInfo[] sorted = new PropertyInfo[count];
+            DataPoolProperty[] sorted = new DataPoolProperty[count];
             Array.Copy(attrProps, sorted, count);
             return sorted;
         }
