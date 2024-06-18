@@ -23,13 +23,17 @@ namespace DataPoolLib
                 Encoding = encoding,
             };
 
-            using MemoryStream stream = new MemoryStream();
-            StreamHelper.WriteMetaData(stream, metaData);
+            using (MemoryStream stream = new MemoryStream())
+            {
+                StreamHelper.WriteMetaData(stream, metaData);
 
-            using BinaryWriter writer = new BinaryWriter(stream, GetEncoding(encoding));
-            DataPoolWriter.Write(writer, obj, type, compress);
+                using (BinaryWriter writer = new BinaryWriter(stream, GetEncoding(encoding), true))
+                {
+                    DataPoolWriter.Write(writer, obj, type, compress);
+                }
 
-            return stream.ToArray();
+                return stream.ToArray();
+            }
         }
 
         public static T? Deserialize<T>(byte[] data) where T : new()
@@ -41,29 +45,28 @@ namespace DataPoolLib
                 throw new InvalidOperationException($"Serializable object must have {nameof(DataPoolObjectAttribute)}");
             }
 
-            using MemoryStream stream = new MemoryStream(data);
+            using (MemoryStream stream = new MemoryStream(data))
+            {
+                DataPoolMetaData metaData = StreamHelper.ReadMetaData(stream);
 
-            DataPoolMetaData metaData = StreamHelper.ReadMetaData(stream);
-            if (false == String.Equals(type.Name, metaData.Name))
-            {
-                throw new InvalidOperationException($"Type {type.Name} does not match serialized type {metaData.Name}");
-            }
+                if (type.Name != metaData.Name)
+                {
+                    throw new InvalidOperationException($"Type {type.Name} does not match serialized type {metaData.Name}");
+                }
 
-            if (false == String.Equals(attr.Version, metaData.Version))
-            {
-                throw new InvalidOperationException($"Version {attr.Version} does not match serialized version {metaData.Version}");
-            }
+                if (attr.Version != metaData.Version)
+                {
+                    throw new InvalidOperationException($"Version {attr.Version} does not match serialized version {metaData.Version}");
+                }
 
-            object? obj = new T();
-            using (BinaryReader reader = new BinaryReader(stream, GetEncoding(metaData.Encoding)))
-            {
-                obj = DataPoolReader.Read(reader, type, metaData.Compressed);
+                object? obj = new T();
+                using (BinaryReader reader = new BinaryReader(stream, GetEncoding(metaData.Encoding), true))
+                {
+                    obj = DataPoolReader.Read(reader, type, metaData.Compressed);
+                }
+
+                return (T)obj;
             }
-            if (obj is null)
-            {
-                return default(T);
-            }
-            return (T)obj;
         }
 
         static Encoding GetEncoding(EEncoding encoding)

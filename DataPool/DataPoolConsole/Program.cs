@@ -24,6 +24,8 @@ namespace DataPoolConsole
             Console.WriteLine(s.Length + "/" + json.Length + " " + ((double)json.Length / (double)s.Length));
 
             var d = DataPoolSerializer.Deserialize<Obj>(s);
+
+
         }
 
         [DataPoolObject("1.0.0")]
