@@ -70,7 +70,8 @@
             if (length == 0) return string.Empty;
 
             byte[] bytes = reader.ReadBytes(sizeof(byte) * length);
-            return Encoding.UTF8.GetString(bytes);
+            string str = Encoding.UTF8.GetString(bytes);
+            return str;
         }
 
         public static object ReadValue(BinaryReader reader, Type type, bool allowDowngrade)

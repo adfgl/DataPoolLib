@@ -88,7 +88,7 @@ namespace DataPoolLib
                 keys[insertIndex] = key;
                 attrProps[insertIndex] = new DataPoolProperty(p)
                 {
-                    AllowDowngrade = attr.AllowDowngrade
+                    AllowDowngrade = attr.AllowDowngrade,
                 };
                 count++;
             }

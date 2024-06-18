@@ -15,27 +15,24 @@
                 return;
             }
 
-            if (obj is null)
-            {
-                writer.Write(NULL);
-                return;
-            }
-            else
-            {
-                writer.Write(NOT_NULL);
-            }
-
             if (type == typeof(string))
             {
-                WriteString(writer, Encoding.UTF8.GetBytes((string)obj), 100);
+                WriteString(writer, obj);
                 return;
             }
 
             if (type.IsArray)
             {
-                WriteArray(writer, (Array)obj, allowDowngrade);
+                WriteArray(writer, obj, allowDowngrade);
                 return;
             }
+
+            if (obj is null)
+            {
+                writer.Write(NULL);
+                return;
+            }
+            writer.Write(NOT_NULL);
 
             DataPoolProperty[] properties = PropertyLoader.GetOrderedProperties(type);
             foreach (DataPoolProperty property in properties)
@@ -45,8 +42,17 @@
             }
         }
 
-        public static void WriteArray(BinaryWriter writer, Array arr, bool allowDowngrade)
+        public static void WriteArray(BinaryWriter writer, object? array, bool allowDowngrade)
         {
+            if (array is null)
+            {
+                writer.Write(NULL);
+                return;
+            }
+
+            writer.Write(NOT_NULL);
+            Array arr = (Array)array;
+
             Type elementType = arr.GetType().GetElementType()!;
             writer.Write((UInt16)arr.Length);
             if (elementType.IsValueType && false == allowDowngrade)
@@ -66,15 +72,22 @@
             }
         }
 
-        public static void WriteString(BinaryWriter writer, byte[] value, int maxLength)
+        public static void WriteString(BinaryWriter writer, object? value)
         {
-            int len = Math.Min(value.Length, maxLength);
-            writer.Write((UInt16)len);
+            if (value is null)
+            {
+                writer.Write(NULL);
+                return;
+            }
 
+            writer.Write(NOT_NULL);
+            byte[] bytes = Encoding.UTF8.GetBytes((string)value);
+            int len = bytes.Length;
+            writer.Write((UInt16)len);  
             if (len > 0)
             {
                 byte[] buffer = new byte[len];
-                Buffer.BlockCopy(value, 0, buffer, 0, len);
+                Buffer.BlockCopy(bytes, 0, buffer, 0, len);
                 writer.Write(buffer);
             }
         }

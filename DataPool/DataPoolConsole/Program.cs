@@ -7,45 +7,46 @@ namespace DataPoolConsole
 
         static void Main(string[] args)
         {
-
-
-            var objs = RandomObjectGenerator.GenerateRandomObjects(10); 
+            var objs = RandomObjectGenerator.GenerateRandomObjects(100); 
             var container = new ObjContainer() { Objects = objs };
 
 
             var o = new Obj()
             {
+                Name = "Pavel",
                 Age = 10,
                 Values = new int[] { 1, 2, 3, 4, 5 },
             };
 
             var s = DataPoolSerializer.Serialize(o, true);
-            var json = System.Text.Json.JsonSerializer.Serialize(o);
+
+            var json = System.Text.Json.JsonSerializer.Serialize(s);
             Console.WriteLine(s.Length + "/" + json.Length + " " + ((double)json.Length / (double)s.Length));
 
-            var d = DataPoolSerializer.Deserialize<Obj>(s);
-
+            //var d = DataPoolSerializer.Deserialize<ObjContainer>(s);
 
         }
 
         [DataPoolObject("1.0.0")]
         public class ObjContainer
         {
-            [DataPoolProperty(0, false)]
+            [DataPoolProperty(0, true)]
             public Obj[] Objects { get; set; }
         }
 
         [DataPoolObject("1.0.0")]
         public class Obj
         {
+            [DataPoolProperty(1)]
+            public bool IsAlive { get; set; }
+
             [DataPoolProperty(0)]
             public string Name { get; set;}
 
             [DataPoolProperty(3)]
             public int Age { get; set; }
 
-            [DataPoolProperty(1)]
-            public bool IsAlive { get; set; }
+      
 
             [DataPoolProperty(2, true)]
             public double[][] Matrix { get; set; }
