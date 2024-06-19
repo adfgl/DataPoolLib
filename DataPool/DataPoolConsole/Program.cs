@@ -8,7 +8,7 @@ namespace DataPoolConsole
 
         static void Main(string[] args)
         {
-            //BenchmarkRunner.Run<DeserializationBenchmark>();
+            ////BenchmarkRunner.Run<DeserializationBenchmark>();
 
             var container = RandomObjectGenerator.GenerateRandomObjects(100);
 
@@ -27,6 +27,8 @@ namespace DataPoolConsole
             Console.WriteLine("With downgrade JSON/DATAPOOL: " + ss.Length + "/" + json.Length + " Ratio: " + (Math.Round((double)json.Length / (double)ss.Length, 2)));
 
             //var d = DataPoolSerializer.Deserialize<ObjContainer>(s);
+            ///
+
 
         }
     }

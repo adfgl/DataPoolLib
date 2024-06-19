@@ -139,12 +139,14 @@
 
         public static void WriteDowngraded(BinaryWriter writer, float value)
         {
-            if (value == 0) // byte
+            // 1 byte
+            if (value == 0) 
             {
                 writer.Write((byte)ENumber.Zero);
                 return;
             }
 
+            // 4 bytes
             if (value != MathF.Floor(value) 
                 || 
                 value > ushort.MaxValue 
@@ -158,12 +160,15 @@
             {
                 if (value > 0)
                 {
-                    if (value <= byte.MaxValue) // byte
+                    // 1 byte
+                    if (value <= byte.MaxValue) 
                     {
                         writer.Write((byte)ENumber.Byte);
                         writer.Write((byte)value);
                     }
-                    else if (value <= ushort.MaxValue) // short
+
+                    // 2 bytes
+                    else if (value <= ushort.MaxValue)
                     {
                         writer.Write((byte)ENumber.UShort);
                         writer.Write((ushort)value);
@@ -171,11 +176,14 @@
                 }
                 else
                 {
+                    // 1 byte
                     if (value >= sbyte.MinValue)
                     {
                         writer.Write((byte)ENumber.SByte);
                         writer.Write((sbyte)value);
                     }
+
+                    // 2 bytes
                     else if (value >= short.MinValue)
                     {
                         writer.Write((byte)ENumber.Short);
@@ -187,7 +195,8 @@
 
         public static void WriteDowngraded(BinaryWriter writer, double value)
         {
-            if (value == 0) // byte
+            // 1 byte
+            if (value == 0)
             {
                 writer.Write((byte)ENumber.Zero);
                 return;
@@ -195,12 +204,16 @@
 
             if (value != Math.Floor(value)) // has fraction
             {
-                if (value <= float.MaxValue || value >= float.MinValue) // float
+                // 4 bytes
+                if (value <= float.MaxValue || value >= float.MinValue)
                 {
                     writer.Write((byte)ENumber.Float);
                     writer.Write((float)value);
+                    return;
                 }
-                else // double
+
+                // 8 bytes
+                else
                 {
                     writer.Write((byte)ENumber.Double);
                     writer.Write(value);
@@ -210,38 +223,62 @@
             {
                 if (value > 0)
                 {
-                    if (value <= byte.MaxValue) // byte
+                    // 1 byte
+                    if (value <= byte.MaxValue)
                     {
                         writer.Write((byte)ENumber.Byte);
                         writer.Write((byte)value);
                     }
-                    else if (value <= ushort.MaxValue) // short
+
+                    // 2 bytes
+                    else if (value <= ushort.MaxValue) 
                     {
                         writer.Write((byte)ENumber.UShort);
                         writer.Write((ushort)value);
                     }
-                    else // int
+
+                    // 4 bytes
+                    else if (value <= int.MaxValue)
                     {
                         writer.Write((byte)ENumber.Int);
                         writer.Write((int)value);
                     }
+
+                    // 8 bytes
+                    else
+                    {
+                        writer.Write((byte)ENumber.Double);
+                        writer.Write(value);
+                    }
                 }
                 else
                 {
+                    // 1 byte
                     if (value >= sbyte.MinValue)
                     {
                         writer.Write((byte)ENumber.SByte);
                         writer.Write((sbyte)value);
                     }
+
+                    // 2 bytes
                     else if (value >= short.MinValue)
                     {
                         writer.Write((byte)ENumber.Short);
                         writer.Write((short)value);
                     }
-                    else // int
+
+                    // 4 bytes
+                    else if (value >= int.MaxValue)
                     {
                         writer.Write((byte)ENumber.Int);
                         writer.Write((int)value);
+                    }
+
+                    // 8 bytes
+                    else
+                    {
+                        writer.Write((byte)ENumber.Double);
+                        writer.Write(value);
                     }
                 }
             }
