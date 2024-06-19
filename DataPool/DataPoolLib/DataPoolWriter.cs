@@ -13,7 +13,7 @@
             writer.Write(majorVersion);
         }
 
-        public static void Write(BinaryWriter writer, object? obj, Type type, bool allowDowngrade)
+        public static void Write(BinaryWriter writer, object? obj, Type type, bool allowDowngrade, bool skipVersion = false)
         {
             if (type.IsValueType)
             {
@@ -41,7 +41,10 @@
             writer.Write(NOT_NULL);
 
             DataPoolProperties properties = PropertyLoader.GetOrderedProperties(type);
-            WriteObjectMetadata(writer, properties.MajorVersion, properties.MajorVersion);
+            if (false == skipVersion)
+            {
+                WriteObjectMetadata(writer, properties.MajorVersion, properties.MajorVersion);
+            }
             foreach (DataPoolProperty property in properties.Properties)
             {
                 PropertyInfo info = property.Info;
@@ -59,10 +62,10 @@
 
             writer.Write(NOT_NULL);
             Array arr = (Array)array;
+            writer.Write((UInt16)arr.Length);
 
             Type elementType = arr.GetType().GetElementType()!;
 
-            writer.Write((UInt16)arr.Length);
             if (elementType.IsValueType && false == allowDowngrade)
             {
                 int byteLength = arr.Length * Marshal.SizeOf(elementType);
@@ -72,9 +75,14 @@
             }
             else
             {
+                DataPoolObjectAttribute? obj = elementType.GetCustomAttribute<DataPoolObjectAttribute>();
+                if (obj is not null)
+                {
+                    WriteObjectMetadata(writer, obj.MajorVersion, obj.MajorVersion);
+                }
                 foreach (object element in arr)
                 {
-                    Write(writer, element, elementType, allowDowngrade);
+                    Write(writer, element, elementType, allowDowngrade, true);
                 }
             }
         }

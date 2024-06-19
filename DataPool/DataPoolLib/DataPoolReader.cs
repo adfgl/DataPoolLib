@@ -13,7 +13,7 @@
             minor = reader.ReadByte();
         }
 
-        public static object? Read(BinaryReader reader, Type type, bool allowDowngrade)
+        public static object? Read(BinaryReader reader, Type type, bool allowDowngrade, bool skipVersion = false)
         {
             // value types
             if (type.IsValueType)
@@ -34,10 +34,13 @@
 
             if (NULL == reader.ReadByte()) return null;
             DataPoolProperties properties = PropertyLoader.GetOrderedProperties(type);
-            ReadObjectMetadata(reader, out byte major, out byte minor);
-            if (properties.MajorVersion != major || properties.MinorVersion < minor)
+            if (!skipVersion)
             {
-                throw new InvalidOperationException($"Type {type.FullName} version mismatch. Expected {properties.MajorVersion}.{properties.MinorVersion}, but got {major}.{minor}");
+                ReadObjectMetadata(reader, out byte major, out byte minor);
+                if (properties.MajorVersion != major || properties.MinorVersion < minor)
+                {
+                    throw new InvalidOperationException($"Type {type.FullName} version mismatch. Expected {properties.MajorVersion}.{properties.MinorVersion}, but got {major}.{minor}");
+                }
             }
 
             object obj = Activator.CreateInstance(type)!;
@@ -66,9 +69,19 @@
             }
             else
             {
+                DataPoolObjectAttribute? obj = elementType.GetCustomAttribute<DataPoolObjectAttribute>();
+                if (obj is not null)
+                {
+                    ReadObjectMetadata(reader, out byte major, out byte minor);
+                    if (obj.MajorVersion != major || obj.MinorVersion < minor)
+                    {
+                        throw new InvalidOperationException($"Type {elementType.FullName} version mismatch. Expected {obj.MajorVersion}.{obj.MinorVersion}, but got {major}.{minor}");
+                    }
+                }
+
                 for (int i = 0; i < length; i++)
                 {
-                    array.SetValue(Read(reader, elementType, allowDowngrade), i);
+                    array.SetValue(Read(reader, elementType, allowDowngrade, true), i);
                 }
             }
             return array;
