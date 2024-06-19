@@ -18,9 +18,9 @@ namespace DataPoolConsole
                 Values = new int[] { 1, 2, 3, 4, 5 },
             };
 
-            var s = DataPoolSerializer.Serialize(o, true);
+            var s = DataPoolSerializer.Serialize(container, true);
 
-            var json = System.Text.Json.JsonSerializer.Serialize(s);
+            var json = System.Text.Json.JsonSerializer.Serialize(container);
             Console.WriteLine(s.Length + "/" + json.Length + " " + ((double)json.Length / (double)s.Length));
 
             //var d = DataPoolSerializer.Deserialize<ObjContainer>(s);
@@ -30,7 +30,7 @@ namespace DataPoolConsole
         [DataPoolObject("1.0.0")]
         public class ObjContainer
         {
-            [DataPoolProperty(0, true)]
+            [DataPoolProperty(0)]
             public Obj[] Objects { get; set; }
         }
 
@@ -46,15 +46,13 @@ namespace DataPoolConsole
             [DataPoolProperty(3)]
             public int Age { get; set; }
 
-      
-
-            [DataPoolProperty(2, true)]
+            [DataPoolProperty(2)]
             public double[][] Matrix { get; set; }
 
-            [DataPoolProperty(6, true)]
+            [DataPoolProperty(6)]
             public int[][] Matrix1 { get; set; }
 
-            [DataPoolProperty(4, true)]
+            [DataPoolProperty(4)]
             public int[] Values { get; set; }
         }
 

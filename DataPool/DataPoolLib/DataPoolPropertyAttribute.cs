@@ -3,7 +3,7 @@
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
     public class DataPoolPropertyAttribute : Attribute
     {
-        public DataPoolPropertyAttribute(int key, bool allowDowngrade = false)
+        public DataPoolPropertyAttribute(int key, bool allowDowngrade = true)
         {
             Key = key;
             AllowDowngrade = allowDowngrade;

@@ -57,8 +57,7 @@
             writer.Write((UInt16)arr.Length);
             if (elementType.IsValueType && false == allowDowngrade)
             {
-                int elementSize = Marshal.SizeOf(elementType);
-                int byteLength = arr.Length * elementSize;
+                int byteLength = arr.Length * Marshal.SizeOf(elementType);
                 byte[] buffer = new byte[byteLength];
                 Buffer.BlockCopy(arr, 0, buffer, 0, byteLength);
                 writer.Write(buffer);

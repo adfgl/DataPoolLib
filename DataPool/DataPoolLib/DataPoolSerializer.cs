@@ -1,5 +1,4 @@
-﻿using System.IO.Compression;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Text;
 
 namespace DataPoolLib
@@ -64,7 +63,6 @@ namespace DataPoolLib
                 {
                     obj = DataPoolReader.Read(reader, type, metaData.Compressed);
                 }
-
                 return (T)obj;
             }
         }
