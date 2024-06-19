@@ -8,7 +8,7 @@ using static DataPoolConsole.Program;
 
 namespace DataPoolConsole
 {
-    [DataPoolObject("1.0.0")]
+    [DataPoolObject(1,0)]
     public class ObjContainer
     {
         [DataPoolProperty(0)]

@@ -7,6 +7,12 @@
 
     public static class DataPoolWriter
     {
+        public static void WriteObjectMetadata(BinaryWriter writer, byte minorVersion, byte majorVersion)
+        {
+            writer.Write(minorVersion);
+            writer.Write(majorVersion);
+        }
+
         public static void Write(BinaryWriter writer, object? obj, Type type, bool allowDowngrade)
         {
             if (type.IsValueType)
@@ -34,8 +40,9 @@
             }
             writer.Write(NOT_NULL);
 
-            DataPoolProperty[] properties = PropertyLoader.GetOrderedProperties(type);
-            foreach (DataPoolProperty property in properties)
+            DataPoolProperties properties = PropertyLoader.GetOrderedProperties(type);
+            WriteObjectMetadata(writer, properties.MajorVersion, properties.MajorVersion);
+            foreach (DataPoolProperty property in properties.Properties)
             {
                 PropertyInfo info = property.Info;
                 Write(writer, info.GetValue(obj), info.PropertyType, allowDowngrade && property.AllowDowngrade);
@@ -54,6 +61,7 @@
             Array arr = (Array)array;
 
             Type elementType = arr.GetType().GetElementType()!;
+
             writer.Write((UInt16)arr.Length);
             if (elementType.IsValueType && false == allowDowngrade)
             {

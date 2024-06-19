@@ -7,6 +7,12 @@
 
     public static class DataPoolReader
     {
+        public static void ReadObjectMetadata(BinaryReader reader, out byte major, out byte minor)
+        {
+            major = reader.ReadByte();
+            minor = reader.ReadByte();
+        }
+
         public static object? Read(BinaryReader reader, Type type, bool allowDowngrade)
         {
             // value types
@@ -27,9 +33,15 @@
             }
 
             if (NULL == reader.ReadByte()) return null;
-            DataPoolProperty[] properties = PropertyLoader.GetOrderedProperties(type);
+            DataPoolProperties properties = PropertyLoader.GetOrderedProperties(type);
+            ReadObjectMetadata(reader, out byte major, out byte minor);
+            if (properties.MajorVersion != major || properties.MinorVersion < minor)
+            {
+                throw new InvalidOperationException($"Type {type.FullName} version mismatch. Expected {properties.MajorVersion}.{properties.MinorVersion}, but got {major}.{minor}");
+            }
+
             object obj = Activator.CreateInstance(type)!;
-            foreach (DataPoolProperty property in properties)
+            foreach (DataPoolProperty property in properties.Properties)
             {
                 PropertyInfo info = property.Info;
                 info.SetValue(obj, Read(reader, info.PropertyType, allowDowngrade && property.AllowDowngrade));

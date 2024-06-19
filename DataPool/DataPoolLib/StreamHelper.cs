@@ -40,7 +40,8 @@ namespace DataPoolLib
         public static void WriteMetaData(Stream stream, DataPoolMetaData metaData)
         {
             WriteString(stream, metaData.Name);
-            WriteString(stream, metaData.Version);
+            stream.WriteByte(metaData.MajorVersion);
+            stream.WriteByte(metaData.MinorVersion);
             stream.WriteByte(metaData.Compressed ? TRUE : FALSE);
             stream.WriteByte((byte)metaData.Encoding);
         }
@@ -49,7 +50,8 @@ namespace DataPoolLib
         {
             DataPoolMetaData metaData = new DataPoolMetaData();
             metaData.Name = ReadString(stream);
-            metaData.Version = ReadString(stream);
+            metaData.MajorVersion = (byte)stream.ReadByte();
+            metaData.MinorVersion = (byte)stream.ReadByte();
             metaData.Compressed = stream.ReadByte() == TRUE;
             metaData.Encoding = (EEncoding)stream.ReadByte();
             return metaData;

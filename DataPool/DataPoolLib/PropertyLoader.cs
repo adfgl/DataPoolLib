@@ -4,7 +4,7 @@ namespace DataPoolLib
 {
     public static class PropertyLoader
     {
-        readonly static Dictionary<string, DataPoolProperty[]> PROPERTY_CACHE = new Dictionary<string, DataPoolProperty[]>();
+        readonly static Dictionary<string, DataPoolProperties> PROPERTY_CACHE = new Dictionary<string, DataPoolProperties>();
 
         public static int CacheCount => PROPERTY_CACHE.Count;
 
@@ -25,16 +25,10 @@ namespace DataPoolLib
             }
         }
 
-        public static DataPoolProperty[] GetOrderedProperties(Type type)
+        public static DataPoolProperties GetOrderedProperties(Type type)
         {
-            if (type.GetCustomAttribute<DataPoolObjectAttribute>() == null && type.GetCustomAttribute<DataPoolPropertyAttribute>() == null)
-            {
-                throw new InvalidOperationException($"{type.FullName}: must have {nameof(DataPoolObjectAttribute)} or {nameof(DataPoolPropertyAttribute)}");
-            }
-
             string key = type.Name;
-
-            DataPoolProperty[]? props;
+            DataPoolProperties? props;
             if (false == PROPERTY_CACHE.TryGetValue(key, out props))
             {
                 props = LoadProperties(type);
@@ -43,8 +37,16 @@ namespace DataPoolLib
             return props;
         }
 
-        public static DataPoolProperty[] LoadProperties(Type type)
+        public static DataPoolProperties LoadProperties(Type type)
         {
+            DataPoolObjectAttribute? obj = type.GetCustomAttribute<DataPoolObjectAttribute>();
+            if (obj == null)
+            {
+                throw new InvalidOperationException($"{type.FullName}: must have {nameof(DataPoolObjectAttribute)}.");
+            }
+
+            DataPoolProperties properties = new DataPoolProperties(obj.MajorVersion, obj.MinorVersion);
+
             PropertyInfo[] props = type.GetProperties();
             int numProps = props.Length;
 
@@ -93,16 +95,25 @@ namespace DataPoolLib
                 count++;
             }
 
+
+
             if (count == 0)
             {
-                return Array.Empty<DataPoolProperty>();
+                properties.Properties = Array.Empty<DataPoolProperty>();
+                return properties;
             }
 
-            if (count == numProps) return attrProps;
+            if (count == numProps)
+            {
+                properties.Properties = attrProps;
+                return properties;
+            }
 
             DataPoolProperty[] sorted = new DataPoolProperty[count];
             Array.Copy(attrProps, sorted, count);
-            return sorted;
+
+            properties.Properties = sorted;
+            return properties;
         }
     }
 }

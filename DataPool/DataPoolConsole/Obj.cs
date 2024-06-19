@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace DataPoolConsole
 {
-    [DataPoolObject("1.0.0")]
+    [DataPoolObject(1, 0)]
     public class Obj
     {
         [DataPoolProperty(1)]

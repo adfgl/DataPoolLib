@@ -1,9 +1,8 @@
 ﻿namespace DataPoolLib
 {
-    [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
-    public class DataPoolObjectAttribute : Attribute
+    public class DataPoolProperties
     {
-        public DataPoolObjectAttribute(byte majorVersion, byte minorVersion)
+        public DataPoolProperties(byte majorVersion, byte minorVersion)
         {
             MajorVersion = majorVersion;
             MinorVersion = minorVersion;
@@ -11,5 +10,7 @@
 
         public byte MajorVersion { get; }
         public byte MinorVersion { get; }
+
+        public DataPoolProperty[] Properties { get; set; }
     }
 }

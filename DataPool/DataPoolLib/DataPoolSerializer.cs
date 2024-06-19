@@ -17,7 +17,8 @@ namespace DataPoolLib
             DataPoolMetaData metaData = new DataPoolMetaData()
             {
                 Name = type.Name,
-                Version = attr.Version,
+                MajorVersion = attr.MajorVersion,
+                MinorVersion = attr.MinorVersion,
                 Compressed = compress,
                 Encoding = encoding,
             };
@@ -53,9 +54,11 @@ namespace DataPoolLib
                     throw new InvalidOperationException($"Type {type.Name} does not match serialized type {metaData.Name}");
                 }
 
-                if (attr.Version != metaData.Version)
+                if (attr.MajorVersion != metaData.MajorVersion || attr.MinorVersion != metaData.MinorVersion)
                 {
-                    throw new InvalidOperationException($"Version {attr.Version} does not match serialized version {metaData.Version}");
+                    string version = $"{attr.MajorVersion}.{attr.MinorVersion}";
+                    string versionMeta = $"{metaData.MajorVersion}.{metaData.MinorVersion}";
+                    throw new InvalidOperationException($"Version {version} does not match serialized version {versionMeta}");
                 }
 
                 object? obj = new T();
