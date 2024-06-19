@@ -324,7 +324,6 @@
                 default:
                     throw new NotSupportedException($"Type {type.FullName} is not supported.");
             }
-
         }
     }
 }
