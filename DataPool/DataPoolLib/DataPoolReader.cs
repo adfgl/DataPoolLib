@@ -7,10 +7,14 @@
 
     public static class DataPoolReader
     {
-        public static void ReadObjectMetadata(BinaryReader reader, out byte major, out byte minor)
+        static void ReadAndValidateVersion(BinaryReader reader, Type type, byte majorExpected, byte minorExpected)
         {
-            major = reader.ReadByte();
-            minor = reader.ReadByte();
+            byte majorActual = reader.ReadByte();
+            byte minorActual = reader.ReadByte();
+            if (majorExpected != majorActual || minorExpected < minorActual)
+            {
+                throw new InvalidOperationException($"Type {type.FullName} version mismatch. Expected {majorExpected}.{minorExpected}, but got {majorActual}.{minorActual}");
+            }
         }
 
         public static object? Read(BinaryReader reader, Type type, bool allowDowngrade, bool skipVersion = false)
@@ -34,13 +38,9 @@
 
             if (NULL == reader.ReadByte()) return null;
             DataPoolProperties properties = PropertyLoader.GetOrderedProperties(type);
-            if (!skipVersion)
+            if (false == skipVersion)
             {
-                ReadObjectMetadata(reader, out byte major, out byte minor);
-                if (properties.MajorVersion != major || properties.MinorVersion < minor)
-                {
-                    throw new InvalidOperationException($"Type {type.FullName} version mismatch. Expected {properties.MajorVersion}.{properties.MinorVersion}, but got {major}.{minor}");
-                }
+                ReadAndValidateVersion(reader, type, properties.MajorVersion, properties.MinorVersion);
             }
 
             object obj = Activator.CreateInstance(type)!;
@@ -69,14 +69,10 @@
             }
             else
             {
-                DataPoolObjectAttribute? obj = elementType.GetCustomAttribute<DataPoolObjectAttribute>();
-                if (obj is not null)
+                DataPoolObjectAttribute? objAttribute = elementType.GetCustomAttribute<DataPoolObjectAttribute>();
+                if (objAttribute is not null)
                 {
-                    ReadObjectMetadata(reader, out byte major, out byte minor);
-                    if (obj.MajorVersion != major || obj.MinorVersion < minor)
-                    {
-                        throw new InvalidOperationException($"Type {elementType.FullName} version mismatch. Expected {obj.MajorVersion}.{obj.MinorVersion}, but got {major}.{minor}");
-                    }
+                    ReadAndValidateVersion(reader, elementType, objAttribute.MajorVersion, objAttribute.MinorVersion);
                 }
 
                 for (int i = 0; i < length; i++)
