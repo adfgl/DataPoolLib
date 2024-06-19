@@ -7,7 +7,7 @@
 
     public static class DataPoolWriter
     {
-        public static void WriteObjectMetadata(BinaryWriter writer, byte minorVersion, byte majorVersion)
+        static void WriteObjectVersion(BinaryWriter writer, byte minorVersion, byte majorVersion)
         {
             writer.Write(minorVersion);
             writer.Write(majorVersion);
@@ -43,7 +43,7 @@
             DataPoolProperties properties = PropertyLoader.GetOrderedProperties(type);
             if (false == skipVersion)
             {
-                WriteObjectMetadata(writer, properties.MajorVersion, properties.MajorVersion);
+                WriteObjectVersion(writer, properties.MajorVersion, properties.MajorVersion);
             }
             foreach (DataPoolProperty property in properties.Properties)
             {
@@ -75,10 +75,10 @@
             }
             else
             {
-                DataPoolObjectAttribute? obj = elementType.GetCustomAttribute<DataPoolObjectAttribute>();
-                if (obj is not null)
+                DataPoolObjectAttribute? objAttribute = elementType.GetCustomAttribute<DataPoolObjectAttribute>();
+                if (objAttribute is not null)
                 {
-                    WriteObjectMetadata(writer, obj.MajorVersion, obj.MajorVersion);
+                    WriteObjectVersion(writer, objAttribute.MajorVersion, objAttribute.MajorVersion);
                 }
                 foreach (object element in arr)
                 {
