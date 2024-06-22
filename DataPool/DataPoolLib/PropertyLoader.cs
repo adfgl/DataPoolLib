@@ -4,7 +4,7 @@ namespace DataPoolLib
 {
     public static class PropertyLoader
     {
-        readonly static Dictionary<string, DataPoolProperties> PROPERTY_CACHE = new Dictionary<string, DataPoolProperties>();
+        readonly static Dictionary<Type, DataPoolProperties> PROPERTY_CACHE = new Dictionary<Type, DataPoolProperties>();
 
         public static int CacheCount => PROPERTY_CACHE.Count;
 
@@ -17,7 +17,7 @@ namespace DataPoolLib
         {
             foreach (Type type in types)
             {
-                if (PROPERTY_CACHE.ContainsKey(type.Name))
+                if (PROPERTY_CACHE.ContainsKey(type))
                 {
                     throw new InvalidOperationException($"{type.FullName}: already loaded. Make sure you do not have duplicate names in your classes.");
                 }
@@ -27,12 +27,11 @@ namespace DataPoolLib
 
         public static DataPoolProperties GetOrderedProperties(Type type)
         {
-            string key = type.Name;
             DataPoolProperties? props;
-            if (false == PROPERTY_CACHE.TryGetValue(key, out props))
+            if (false == PROPERTY_CACHE.TryGetValue(type, out props))
             {
                 props = LoadProperties(type);
-                PROPERTY_CACHE[key] = props;
+                PROPERTY_CACHE[type] = props;
             }
             return props;
         }
@@ -56,6 +55,8 @@ namespace DataPoolLib
 
             foreach (PropertyInfo p in props)
             {
+                if (p.CanWrite == false) continue;
+
                 DataPoolPropertyAttribute? attr = p.GetCustomAttribute<DataPoolPropertyAttribute>();
                 if (attr is null) continue;
 

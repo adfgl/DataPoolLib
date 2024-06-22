@@ -1,5 +1,7 @@
 ﻿using BenchmarkDotNet.Running;
 using DataPoolLib;
+using System.IO.Compression;
+using System.Text;
 
 namespace DataPoolConsole
 {
@@ -10,26 +12,60 @@ namespace DataPoolConsole
         {
             ////BenchmarkRunner.Run<DeserializationBenchmark>();
 
-            var container = RandomObjectGenerator.GenerateRandomObjects(100);
+            //var container = RandomObjectGenerator.GenerateRandomObjects(100);
 
-            var o = new Obj()
+            var actor = new Actor()
             {
-                Name = "Pavel",
-                Age = 10,
-                Values = new int[] { 1, 2, 3, 4, 5 },
+                Name = "Ryan",
+                Surname = "Gosling",
+                Age = 40,
+                IsAlive = true,
+                Budget = [0, 244, -333.3, 100000.4, 0, -10, 10000000.2132313, 123123123, -123123.12312]
             };
 
-            var s = DataPoolSerializer.Serialize(o, false);
-            var ss = DataPoolSerializer.Serialize(o, true);
+            var s = DataPoolSerializer.Serialize(actor, false);
+            var ss = DataPoolSerializer.Serialize(actor, true);
+            var json = System.Text.Json.JsonSerializer.Serialize(actor);
+            var d = DataPoolSerializer.Deserialize<Actor>(s);
+
+            Console.WriteLine("No downgrade DATAPOOL/JSON: " + s.Length + "/" + json.Length + " Ratio: " + (Math.Round((double)json.Length / (double)s.Length, 2)));
+            Console.WriteLine("With downgrade DATAPOOL/JSON: " + ss.Length + "/" + json.Length + " Ratio: " + (Math.Round((double)json.Length / (double)ss.Length, 2)));
 
 
-            var json = System.Text.Json.JsonSerializer.Serialize(o);
+        }
 
+        public static byte[] Compress(string input)
+        {
+            using (var memoryStream = new MemoryStream())
+            {
+                using (var gzipStream = new GZipStream(memoryStream, CompressionMode.Compress))
+                {
+                    using (var writer = new StreamWriter(gzipStream, Encoding.UTF8))
+                    {
+                        writer.Write(input);
+                    }
+                }
+                return memoryStream.ToArray();
+            }
+        }
 
-            Console.WriteLine("No downgrade JSON/DATAPOOL: " + s.Length + "/" + json.Length + " Ratio: " + (Math.Round((double)json.Length / (double)s.Length, 2)));
-            Console.WriteLine("With downgrade JSON/DATAPOOL: " + ss.Length + "/" + json.Length + " Ratio: " + (Math.Round((double)json.Length / (double)ss.Length, 2)));
+        [DataPoolObject(2, 0)]
+        public class Actor
+        {
+            [DataPoolProperty(0)]
+            public string Name { get; set; }
 
+            [DataPoolProperty(1)]
+            public string Surname { get; set; }
 
+            [DataPoolProperty(2)]
+            public int Age { get; set; }
+
+            [DataPoolProperty(3)]
+            public bool IsAlive { get; set; }
+
+            [DataPoolProperty(4)]
+            public double[] Budget { get; set; }
         }
     }
 

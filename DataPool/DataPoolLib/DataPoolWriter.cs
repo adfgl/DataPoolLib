@@ -43,7 +43,7 @@
             DataPoolProperties properties = PropertyLoader.GetOrderedProperties(type);
             if (false == skipVersion)
             {
-                WriteObjectVersion(writer, properties.MajorVersion, properties.MajorVersion);
+                WriteObjectVersion(writer, properties.MajorVersion, properties.MinorVersion);
             }
             foreach (DataPoolProperty property in properties.Properties)
             {
@@ -78,7 +78,7 @@
                 DataPoolObjectAttribute? objAttribute = elementType.GetCustomAttribute<DataPoolObjectAttribute>();
                 if (objAttribute is not null)
                 {
-                    WriteObjectVersion(writer, objAttribute.MajorVersion, objAttribute.MajorVersion);
+                    WriteObjectVersion(writer, objAttribute.MajorVersion, objAttribute.MinorVersion);
                 }
                 foreach (object element in arr)
                 {
